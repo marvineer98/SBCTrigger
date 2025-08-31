@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SBCTrigger", "src\SBCTrigger.csproj", "{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|linux-arm = Debug|linux-arm
+		Debug|linux-arm64 = Debug|linux-arm64
+		Release|linux-arm = Release|linux-arm
+		Release|linux-arm64 = Release|linux-arm64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}.Debug|linux-arm.ActiveCfg = Debug|linux-arm
+		{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}.Debug|linux-arm.Build.0 = Debug|linux-arm
+		{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}.Debug|linux-arm64.ActiveCfg = Debug|linux-arm64
+		{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}.Debug|linux-arm64.Build.0 = Debug|linux-arm64
+		{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}.Release|linux-arm.ActiveCfg = Release|linux-arm
+		{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}.Release|linux-arm.Build.0 = Release|linux-arm
+		{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}.Release|linux-arm64.ActiveCfg = Release|linux-arm64
+		{DE7A2E85-2857-4AF4-AF54-ED24C5F9D910}.Release|linux-arm64.Build.0 = Release|linux-arm64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {129BCB77-7330-4B9C-95EE-07442CEFE665}
+	EndGlobalSection
+EndGlobal

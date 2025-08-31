@@ -1,0 +1,16 @@
+{
+  "id": "SBCTrigger",
+  "name": "SBCTrigger",
+  "author": "Marvin Manderscheid",
+  "version": "0.0.1-preview.1",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/marvineer98/SBCTrigger",
+  "sbcRequired": true,
+  "sbcDsfVersion": "3.6.1",
+  "sbcExecutable": "SBCTrigger",
+  "SbcOutputRedirected": true,
+  "sbcPermissions": [
+    "commandExecution",
+    "codeInterceptionReadWrite"
+    ]
+}
