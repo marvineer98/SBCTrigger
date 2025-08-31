@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	  <PublishSingleFile>true</PublishSingleFile>
+    <PublishSelfContained>true</PublishSelfContained>
+    <RuntimeIdentifiers>linux-arm;linux-arm64</RuntimeIdentifiers>
+    <InformationalVersion>0.0.1-preview.1</InformationalVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|linux-arm'">
+    <DebugType>portable</DebugType>
+    <PublishProtocol>FileSystem</PublishProtocol>
+    <PublishDir>..\dsf\arm</PublishDir>
+    <RuntimeIdentifier>linux-arm</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|linux-arm64'">
+    <DebugType>portable</DebugType>
+    <PublishProtocol>FileSystem</PublishProtocol>
+    <PublishDir>..\dsf\arm64</PublishDir>
+    <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|linux-arm'">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishProtocol>FileSystem</PublishProtocol>
+    <PublishDir>..\dsf\arm</PublishDir>
+    <RuntimeIdentifier>linux-arm</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|linux-arm64'">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishProtocol>FileSystem</PublishProtocol>
+    <PublishDir>..\dsf\arm64</PublishDir>
+    <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DuetAPIClient" Version="3.6.1" />
+  </ItemGroup>
+
+  <Target Name="CheckProperties" AfterTargets="PrepareForBuild">
+    <Message Importance="High" Text="Build for $(Configuration), Platform: $(Platform)" />
+  </Target>
+
+</Project>
