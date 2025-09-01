@@ -9,6 +9,9 @@
   "sbcDsfVersion": "3.6.1",
   "sbcExecutable": "SBCTrigger",
   "SbcOutputRedirected": true,
+  "SbcConfigFiles": [
+    "sys/SBCTrigger_config.g"
+  ],
   "sbcPermissions": [
     "commandExecution",
     "codeInterceptionReadWrite"
