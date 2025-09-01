@@ -15,9 +15,7 @@ namespace SBCTrigger
         // Connection used for commanding codes and evaluate expressions
         private CommandConnection Connection { get; } = new();
 
-        private readonly string stateExpression;
-        private readonly string stateOperation;
-        private readonly object stateTriggerValue;
+        private readonly string expresssion;
 
         private readonly string action;
 
@@ -26,18 +24,11 @@ namespace SBCTrigger
         private bool triggered = false;
         private Task? task;
 
-        public SBCTrigger(string expresssionString, string code, RunCondition runCondition = RunCondition.Always)
+        public SBCTrigger(string expresssionString, string actionString, RunCondition runCondition = RunCondition.Always)
         {
             Connection.Connect();
-            var match = ExpressionRegex().Match(expresssionString);
-            if (!match.Success)
-            {
-                throw new ArgumentException("Invalid expression format. Needs to be in this format: <node><condition><value>", nameof(expresssionString));
-            }
-            stateExpression = match.Groups[1].Value.Trim();
-            stateOperation = match.Groups[2].Value.Trim();
-            stateTriggerValue = match.Groups[3].Value.Trim();
-            action = code;
+            expresssion = expresssionString;
+            action = actionString;
             // Set the run condition and start the task if needed
             SetRunCondition(runCondition);
         }
@@ -58,7 +49,7 @@ namespace SBCTrigger
 
         public override string ToString()
         {
-            return $"Expression: '{stateExpression} {stateOperation} {stateTriggerValue}', Action: '{action}', RunCondition: {runCondition}, Triggered: {triggered}";
+            return $"Expression: '{expresssion}', Action: '{action}', RunCondition: {runCondition}, Triggered: {triggered}";
         }
 
         private async Task Loop()
@@ -72,64 +63,60 @@ namespace SBCTrigger
                     await Task.Delay(250);
 
                     // skip evaluation if run condition is not met
-                    if (!runCondition.Equals(RunCondition.Always))
+                    if (runCondition != RunCondition.Always)
                     {
-                        var status = Connection.EvaluateExpression("state.status").Result.ToString().Trim().ToLower();
-                        if (runCondition.Equals(RunCondition.WhilePrinting) && status != "processing"
-                         || runCondition.Equals(RunCondition.NotPrinting) && status == "processing")
-                        {
+                        // check if we are printing from SD card
+                        // job.build exists and state.status is not "simulating"
+                        var jobFileexists = (await Connection.EvaluateExpression("exists(job.build)")).ToString() == "True";
+                        var status = (await Connection.EvaluateExpression("state.status")).ToString();
+                        var isPrinting = jobFileexists && status != "simulating";
+                        // continue when runCondition is WhilePrinting and we are not printing
+                        // or NotPrinting and we are printing
+                        if (runCondition == RunCondition.WhilePrinting != isPrinting)
                             continue;
-                        }
                     }
 
                     // evaluate the expression
+                    var result = string.Empty;
                     try
                     {
-                        var result = Connection.EvaluateExpression(stateExpression).Result.ToString();
+                        result = Connection.EvaluateExpression(expresssion).Result.ToString();
 
-                        // compare the result with the trigger value
-                        bool conditionMet = stateOperation switch
-                        {
-                            "==" => result == (stateTriggerValue as string),
-                            "!=" => result != (stateTriggerValue as string),
-                            ">" => Convert.ToDouble(result) > Convert.ToDouble(stateTriggerValue),
-                            "<" => Convert.ToDouble(result) < Convert.ToDouble(stateTriggerValue),
-                            ">=" => Convert.ToDouble(result) >= Convert.ToDouble(stateTriggerValue),
-                            "<=" => Convert.ToDouble(result) <= Convert.ToDouble(stateTriggerValue),
-                            _ => throw new InvalidOperationException("Invalid state operation: " + stateOperation)
-                        };
-
-                        // check if the condition is met and if we have not triggered yet
-                        if (!triggered && conditionMet)
-                        {
-                            // we need to trigger now
-                            try
-                            {
-                                await Connection.PerformSimpleCode(action);
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine($"SBCTrigger: Failed to trigger the action '{action}', deactivating the corresponding trigger for now: {e.Message}");
-                                SetRunCondition(RunCondition.Disabled);
-                                break;
-                            }
-                            // set the trigger flag
-                            triggered = true;
-                            continue;
-                        }
-                        // check if we have triggered and the condition is no longer met
-                        else if (triggered && !conditionMet)
-                        {
-                            // Condition no longer met, reset trigger
-                            triggered = false;
-                            continue;
-                        }
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"SBCTrigger: Failed to evaluate expression '{stateExpression}', deactivating the corresponding trigger for now: {e.Message}");
+                        Console.WriteLine($"SBCTrigger: Failed to evaluate expression '{expresssion}', deactivating the corresponding trigger for now: {e.Message}");
                         SetRunCondition(RunCondition.Disabled);
                         break;
+                    }
+
+                    // compare the result with the trigger value
+                    bool conditionMet = result == "True";
+
+                    // check if the condition is met and if we have not triggered yet
+                    if (!triggered && conditionMet)
+                    {
+                        // we need to trigger now
+                        try
+                        {
+                            await Connection.PerformSimpleCode(action);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"SBCTrigger: Failed to trigger the action '{action}', deactivating the corresponding trigger for now: {e.Message}");
+                            SetRunCondition(RunCondition.Disabled);
+                            break;
+                        }
+                        // set the trigger flag
+                        triggered = true;
+                        continue;
+                    }
+                    // check if we have triggered and the condition is no longer met
+                    else if (triggered && !conditionMet)
+                    {
+                        // Condition no longer met, reset trigger
+                        triggered = false;
+                        continue;
                     }
                 }
                 catch (Exception e)
@@ -140,8 +127,5 @@ namespace SBCTrigger
                 }
             }
         }
-
-        [System.Text.RegularExpressions.GeneratedRegex(@"^(.*?)(==|!=|>=|<=|>|<)(.*)$")]
-        private static partial System.Text.RegularExpressions.Regex ExpressionRegex();
     }
 }
