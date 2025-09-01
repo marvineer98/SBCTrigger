@@ -5,7 +5,7 @@ SBCTrigger is a Duet3D RepRapFirmware (RRF) plugin that provides advanced SBC-si
 
 ## Status
 
-Version: 0.0.1-preview.1  
+Version: 0.0.1-preview.2  
 See: https://github.com/marvineer98/SBCTrigger
 
 ## Configuration
@@ -27,7 +27,7 @@ Parameters:
     - R2 — Only when not printing
     - R-1 — Temporarily disable the trigger
 - P: Object-model expression evaluated to decide whether to trigger (e.g., state.status, heat.heaters[n].current).
-- A: G-code action to run when the expression is true.
+- A: G-code action to run ones the trigger condition is met (only once for each change to True).
 
 ## Examples
 

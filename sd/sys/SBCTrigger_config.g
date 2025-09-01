@@ -1,18 +1,6 @@
 ; SBCTrigger config file
-; Version 0.0.1-preview.1
+; Version 0.0.1-preview.2
 ; see https://github.com/marvineer98/SBCTrigger for further info
-;
-; How to define a trigger:
-; M583.1
-;  Parameters: (They are based on the documentation of RRF triggers)
-;   Tnn: Logical trigger number to assign (starting from 0 up to a SBC-specific maximum).
-;   R: Run condition:
-;     R0 – Trigger at any time (default)
-;     R1 – Only trigger while printing from SD card
-;     R2 – Only trigger when not printing
-;     R-1 – Temporarily disables the trigger (can be run in files, from console and so on)
-;   P: Defines the object model state expression that will trigger the action
-;   A: G-code action to run when the trigger condition is met
 ;
 ; Examples:
 ;   Run a macro when the printer turns off while not printing

@@ -42,12 +42,12 @@ namespace SBCTrigger
                     CancelSource.Cancel();
                 }
             };
-            
+
             // Create an intercepting connection for codes that are not supported natively by DCS
             await Connection.Connect(InterceptionMode.Pre, null, InterceptedCodes, false, Defaults.FullSocketPath);
 
-            //TODO: load existing triggers from file
-            //      'M98 P"SBCTrigger_config.g"'
+            // load config file
+            _ = Task.Run(LoadConfigFile);
 
             // store all managed Triggers with there number
             var triggers = new Dictionary<int, SBCTrigger>();
@@ -151,6 +151,16 @@ namespace SBCTrigger
                 }
             }
             while (!CancellationToken.IsCancellationRequested);
+        }
+
+        // Command connection used to send commands outside of the interception context
+        // This is needed to load the plugin config.g file
+        static async Task LoadConfigFile()
+        {
+            CommandConnection CommandConnection = new();
+            await CommandConnection.Connect();
+            await CommandConnection.PerformSimpleCode("M98 P\"SBCTrigger_config.g\"");
+            CommandConnection.Dispose();
         }
     }
 }
