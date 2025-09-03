@@ -8,9 +8,9 @@
   "sbcRequired": true,
   "sbcDsfVersion": "3.6.1",
   "sbcExecutable": "SBCTrigger",
-  "SbcOutputRedirected": true,
-  "SbcConfigFiles": [
-    "sys/SBCTrigger_config.g"
+  "sbcOutputRedirected": true,
+  "sbcConfigFiles": [
+    "SBCTrigger_config.g"
   ],
   "sbcPermissions": [
     "commandExecution",
