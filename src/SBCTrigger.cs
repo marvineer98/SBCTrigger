@@ -15,22 +15,33 @@ namespace SBCTrigger
         // Connection used for commanding codes and evaluate expressions
         private CommandConnection Connection { get; } = new();
 
-        private readonly string expresssion;
+        private string expresssion;
 
-        private readonly string action;
+        private string action;
 
         private RunCondition runCondition;
 
-        private bool triggered = false;
+        private bool triggered;
         private Task? task;
 
-        public SBCTrigger(string expresssionString, string actionString, RunCondition runCondition = RunCondition.Always)
+        public SBCTrigger(string expresssionString, string actionString, bool initialState = false, RunCondition runCondition = RunCondition.Always)
         {
             Connection.Connect();
             expresssion = expresssionString;
             action = actionString;
+            triggered = initialState;
             // Set the run condition and start the task if needed
             SetRunCondition(runCondition);
+        }
+
+        public void UpdateParams(string? stateExpression, string? actionString, RunCondition? newRunCondition)
+        {
+            if (!string.IsNullOrWhiteSpace(stateExpression))
+                expresssion = stateExpression;
+            if (!string.IsNullOrWhiteSpace(actionString))
+                action = actionString;
+            if (newRunCondition.HasValue && newRunCondition.Value != runCondition)
+                SetRunCondition(newRunCondition.Value);
         }
 
         public void SetRunCondition(RunCondition newCondition)

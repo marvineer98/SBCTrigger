@@ -13,7 +13,6 @@ namespace SBCTrigger
         // codes that should be intercepted by this plugin
         public static readonly string[] InterceptedCodes = [
             "M583",
-            "M583.1"
         ];
 
         // Connection used for intercepting codes from stream
@@ -50,7 +49,7 @@ namespace SBCTrigger
             _ = Task.Run(LoadConfigFile);
 
             // store all managed Triggers with there number
-            var triggers = new Dictionary<int, SBCTrigger>();
+            var triggers = new Dictionary<uint, SBCTrigger>();
 
             // Keep intercepting codes until the plugin is stopped
             do
@@ -79,75 +78,68 @@ namespace SBCTrigger
                 {
                     switch (code.MajorNumber)
                     {
-                        // get a list of all defined triggers
-                        case 583 when code.MinorNumber == 0 || code.MinorNumber == null:
-                            if (triggers.Count == 0)
-                            {
-                                await Connection.ResolveCode(MessageType.Success, "No SBCTriggers defined. Define one with M583.1", CancellationToken);
-                                break;
-                            }
+                        // get a list of all defined triggers if no params set
+                        // define a new trigger or update an existing one if params are given
+                        case 583 when code.MinorNumber is 0 or null:
 
-                            var summaryMessage = "Defined SBCTriggers:\n";
-                            foreach (var trigger in triggers)
-                            {
-                                summaryMessage += "Trigger " + trigger.Key + ": " + trigger.Value.ToString() + "\n";
-                            }
-                            await Connection.ResolveCode(MessageType.Success, summaryMessage, CancellationToken);
-                            break;
-                        // Set or update a spedivic SBCTrigger
-                        case 583 when code.MinorNumber == 1:
-                            try
-                            {
-                                // get the trigger index
-                                var index = code.GetInt('T');
-                                // get the state expression if any
-                                code.TryGetString('P', out var stateExpression);
-                                // get the action if any
-                                code.TryGetString('A', out var action);
-                                // get the run condition
-                                var runCondition = (RunCondition)code.GetInt('R', 0);
+                            // get the trigger index
+                            code.TryGetUInt('T', out uint? index);
+                            // get the state expression if any
+                            code.TryGetString('P', out var stateExpression);
+                            // get the action if any
+                            code.TryGetString('A', out var action);
+                            // get the initial trigger state if any
+                            var initialState = code.GetBool('S', false);
+                            // get the run condition
+                            var runCondition = (RunCondition)code.GetInt('R', 0);
 
-                                // create a new trigger if it does not exist yet
-                                if (!triggers.TryGetValue(index, out var trigger))
+                            // if no params are given, list all defined triggers
+                            if (index == null && stateExpression == null && action == null)
+                            {
+                                var summaryMessage = "No SBCTriggers defined.";
+                                // list all defined triggers
+                                if (triggers.Count > 0)
                                 {
-                                    if (string.IsNullOrWhiteSpace(stateExpression) || string.IsNullOrWhiteSpace(action))
+                                    summaryMessage = $"There are {triggers.Count} SBCTriggers defined:\n";
+                                    foreach (var trigger in triggers.OrderBy(t => t.Key).ToList())
                                     {
-                                        await Connection.ResolveCode(MessageType.Error, $"SBCTrigger {index} does not exist. Provide both 'P' and 'A' to create.", CancellationToken);
-                                        break;
+                                        summaryMessage += "SBCTrigger " + trigger.Key + ": " + trigger.Value.ToString() + "\n";
                                     }
-                                    triggers[index] = new SBCTrigger(stateExpression, action, runCondition);
-                                    await Connection.ResolveCode(MessageType.Success, $"SBCTrigger {index} created.", CancellationToken);
-                                    break;
                                 }
-
-                                // update an existing trigger runCondition
-                                if (string.IsNullOrWhiteSpace(stateExpression) || string.IsNullOrWhiteSpace(action))
-                                {
-                                    triggers[index].SetRunCondition(runCondition);
-                                    await Connection.ResolveCode(MessageType.Success, $"SBCTrigger {index} run condition updated.", CancellationToken);
-                                    break;
-                                }
-
-                                // update an existing trigger completely
-                                triggers[index].SetRunCondition(RunCondition.Disabled);
-                                triggers[index] = new SBCTrigger(stateExpression, action, runCondition);
-                                await Connection.ResolveCode(MessageType.Success, $"SBCTrigger {index} updated.", CancellationToken);
+                                await Connection.ResolveCode(MessageType.Success, summaryMessage, CancellationToken);
                                 break;
                             }
-                            catch (Exception e)
+                            // if an index is given and the trigger is not known, create it
+                            else if (index.HasValue && !triggers.TryGetValue(index.Value, out _))
                             {
-                                await Connection.ResolveCode(MessageType.Error, $"Failed to perform action: {e.Message}", CancellationToken);
+                                if (!string.IsNullOrWhiteSpace(stateExpression) && !string.IsNullOrWhiteSpace(action))
+                                {
+                                    triggers[index.Value] = new SBCTrigger(stateExpression, action, initialState, runCondition);
+                                    await Connection.ResolveCode(MessageType.Success, $"SBCTrigger {index.Value} created.", CancellationToken);
+                                    break;
+                                }
                             }
+                            // if an index is given and there is a trigger, update it
+                            else if (index.HasValue && triggers.TryGetValue(index.Value, out _))
+                            {
+                                // update an existing trigger (parcially)
+                                triggers[index.Value].UpdateParams(stateExpression, action, runCondition);
+                                await Connection.ResolveCode(MessageType.Success, $"SBCTrigger {index.Value} updated.", CancellationToken);
+                                break;
+                            }
+
+                            await Connection.ResolveCode(MessageType.Error, $"Provide at least 'T' (trigger index), 'P' (expression) and 'A' (action) to create an SBCTrigger.", CancellationToken);
                             break;
+                        
                         // Unknown code. Should never get here
                         default:
                             await Connection.IgnoreCode();
                             break;
                     }
                 }
-                catch (Exception e) when (e is MissingParameterException or InvalidParameterTypeException)
+                catch (Exception e)
                 {
-                    await Connection.ResolveCode(MessageType.Error, $"{code.ToShortString()}: {e.Message}");
+                    await Connection.ResolveCode(MessageType.Error, $"{code.ToShortString()} failed: {e.Message}");
                 }
             }
             while (!CancellationToken.IsCancellationRequested);
