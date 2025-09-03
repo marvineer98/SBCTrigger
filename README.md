@@ -5,18 +5,18 @@ SBCTrigger is a Duet3D RepRapFirmware (RRF) plugin that provides advanced SBC-si
 
 ## Status
 
-Version: 0.0.1-preview.2  
+Version: 0.0.1-preview.3  
 See: https://github.com/marvineer98/SBCTrigger
 
 ## Configuration
 
-SBCTrigger uses RRF trigger-style commands (M583.1) to define triggers. Each trigger includes a logical number, run condition, a state expression, and an action G‑code to execute.
+SBCTrigger uses RRF trigger-style commands (M583) to define triggers. Each trigger includes a logical number, run condition, a state expression, and an action G‑code to execute.
 
 ## Trigger syntax
 
 General form:
 ```
-M583.1 T<n> R<r> P"<expression>" A"<gcode>"
+M583 T<n> R<r> P"<expression>" A"<gcode>"
 ```
 
 Parameters:
@@ -28,29 +28,36 @@ Parameters:
     - R-1 — Temporarily disable the trigger
 - P: Object-model expression evaluated to decide whether to trigger (e.g., state.status, heat.heaters[n].current).
 - A: G-code action to run ones the trigger condition is met (only once for each change to True).
+- S: Starting state of the trigger
+    - S0 — Not triggered (default)
+    - S1 — triggered
 
 ## Examples
 
 Run a macro when the printer turns off while not printing:
 ```
-M583.1 T1 R2 P"state.status==off" A'M98 P"/sys/callme.g"'
+M583 T1 R2 P"state.status==off" A'M98 P"/sys/callme.g"'
 ```
 
 Light up LEDs if tool 0 temperature gets high:
 ```
-M583.1 T2 R0 P"heat.heaters[1].current > 90" A"M150 R255 U0 B0 P255 S10"
+M583 T2 R0 P"heat.heaters[1].current > 90" A"M150 R255 U0 B0 P255 S10"
 ```
 
 Turn off LEDs when tool 0 temperature drops:
 ```
-M583.1 T3 R0 P"heat.heaters[1].current < 90" A"M150 R0 U0 B0 P0 S10"
+M583 T3 R0 P"heat.heaters[1].current < 90" A"M150 R0 U0 B0 P0 S10"
 ```
 
-Beep whenever status changes from idle:
+Beep ones whenever status is no longer idle:
 ```
-M583.1 T0 P"state.status != idle" A"M300 S3000 P150"
+M583 T0 P"state.status != idle" A"M300 S3000 P150"
 ```
 
+Beep periodically:
+```
+M583 T0 P"state.msUpTime > 500" A"M300 P70" 
+```
 ## Notes
 
 - Expressions use the RRF object model; verify property names and indexes.

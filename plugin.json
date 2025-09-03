@@ -2,7 +2,7 @@
   "id": "SBCTrigger",
   "name": "SBCTrigger",
   "author": "Marvin Manderscheid",
-  "version": "0.0.1-preview.2",
+  "version": "0.0.1-preview.3",
   "license": "GPL-3.0-or-later",
   "homepage": "https://github.com/marvineer98/SBCTrigger",
   "sbcRequired": true,
@@ -10,7 +10,7 @@
   "sbcExecutable": "SBCTrigger",
   "sbcOutputRedirected": true,
   "sbcConfigFiles": [
-    "SBCTrigger_config.g"
+    "sys/SBCTrigger_config.g"
   ],
   "sbcPermissions": [
     "commandExecution",
